@@ -1,5 +1,6 @@
 package app;
 
+import jobs.DailyAllFlightAvgJob;
 import jobs.DailyFlightAvgJob;
 import jobs.FlightCountJob;
 import maps.FlightCountJobMap;
@@ -46,7 +47,13 @@ public class MapReduceApp {
     }
 
     private static void dailyAvgOfAllFlight() {
-
+        try {
+            Job job = new DailyAllFlightAvgJob().buildJob();
+            job.setJarByClass(MapReduceApp.class);
+            job.waitForCompletion(true);
+        }catch (Exception ex){
+            System.err.println(ex.getMessage());
+        }
     }
 
     private static void dailyAvgOfFlight() {

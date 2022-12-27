@@ -1,0 +1,25 @@
+package utilites;
+
+public class Commons {
+    // MAHBUB- CLUSTER
+    public static final String DATA_INPUT_PROBLEM_1 = "/user/bigdata/project/input/DataSet_Train.csv";
+    public static final String DATA_OUTPUT_PROBLEM_1 = "/user/mahbubhasan/project/output/map-reduce-1";
+
+    public static final String DATA_INPUT_PROBLEM_2 = DATA_OUTPUT_PROBLEM_1+"/part-r-00000";
+    public static final String DATA_OUTPUT_PROBLEM_2 = "/user/mahbubhasan/project/output/map-reduce-2";
+
+    public static final String DATA_INPUT_PROBLEM_3 = DATA_OUTPUT_PROBLEM_2+"/part-r-00000";
+    public static final String DATA_OUTPUT_PROBLEM_3 = "/user/mahbubhasan/project/output/map-reduce-3";
+
+    //
+    /*
+    public static final String DATA_INPUT_PROBLEM_1 = "/user/bigdata/project/input/DataSet_Train.csv";
+    public static final String DATA_OUTPUT_PROBLEM_1 = "/user/mahbubhasan/project/output/map-reduce-1";
+
+    public static final String DATA_INPUT_PROBLEM_2 = DATA_OUTPUT_PROBLEM_1+"/part-r-00000";
+    public static final String DATA_OUTPUT_PROBLEM_2 = "/user/mahbubhasan/project/output/map-reduce-2";
+
+    public static final String DATA_INPUT_PROBLEM_3 = DATA_OUTPUT_PROBLEM_2+"/part-r-00000";
+    public static final String DATA_OUTPUT_PROBLEM_3 = "/user/mahbubhasan/project/output/map-reduce-3";
+     */
+}

@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import reducers.FlightCountJobReducer;
+import utilites.Commons;
 
 public class FlightCountJob implements GenericJob{
 
@@ -30,8 +31,8 @@ public class FlightCountJob implements GenericJob{
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(IntWritable.class);
 
-            Path inputPath = new Path("/user/bigdata/project/input/DataSet_Train.csv");
-            Path outputPath = new Path("/user/mahbubhasan/project/output/map-reduce-1");
+            Path inputPath = new Path(Commons.DATA_INPUT_PROBLEM_1);
+            Path outputPath = new Path(Commons.DATA_OUTPUT_PROBLEM_1);
             FileSystem fs = FileSystem.get(configuration);
             if(fs.exists(outputPath))
                 fs.delete(outputPath, true);

@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import reducers.DailyFlightAvgReducer;
 import reducers.FlightCountJobReducer;
+import utilites.Commons;
 
 public class DailyFlightAvgJob implements GenericJob{
     @Override
@@ -32,8 +33,8 @@ public class DailyFlightAvgJob implements GenericJob{
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(DoubleWritable.class);
 
-            Path inputPath = new Path("/user/mahbubhasan/project/output/map-reduce-1/part-r-00000");
-            Path outputPath = new Path("/user/mahbubhasan/project/output/map-reduce-2");
+            Path inputPath = new Path(Commons.DATA_INPUT_PROBLEM_2);
+            Path outputPath = new Path(Commons.DATA_OUTPUT_PROBLEM_2);
             FileSystem fs = FileSystem.get(configuration);
             if(fs.exists(outputPath))
                 fs.delete(outputPath, true);
