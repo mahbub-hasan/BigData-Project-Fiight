@@ -3,6 +3,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import utilities.Commons;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -13,10 +14,20 @@ import java.util.Locale;
 public class SparkMachineLearning {
     public static void main(String[] args) {
 
-        SparkSession spark=SparkSession.builder().appName("SparkMachineLearning").getOrCreate();
-        Dataset<Row> originalDataset=spark.read().option("delimiter",";").option("header","true").schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price int").csv("DataSet_Train.csv");
-        Dataset<Row> datasetResultPoint2=spark.read().option("delimiter","\t").option("header","false").schema("airport string,average double").csv("project/output/map-reduce-2/part-r-00000");
-        Dataset<Row> datasetResultPoint3=spark.read().option("delimiter","\t").option("header","false").schema("name_avg string,real_average double").csv("project/output/map-reduce-3/part-r-00000");
+        SparkSession spark=SparkSession.builder().appName("SparkMachineLearning").master("local").getOrCreate();
+
+        Dataset<Row> originalDataset=spark.read().option("delimiter",";").option("header","true")
+                .schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price int")
+                .csv(Commons.TRAIN_DATASET);
+
+        Dataset<Row> datasetResultPoint2=spark.read().option("delimiter","\t").option("header","false")
+                .schema("airport string,average double")
+                .csv(Commons.MAP_REDUCE_2);
+
+        Dataset<Row> datasetResultPoint3=spark.read().option("delimiter","\t").option("header","false")
+                .schema("name_avg string,real_average double")
+                .csv(Commons.MAP_REDUCE_3);
+
         datasetResultPoint3.show();
         datasetResultPoint2.show();
         originalDataset.show();
@@ -30,8 +41,6 @@ public class SparkMachineLearning {
                 String airline = value.getAs("airline");
                 String data=value.getAs("date");
                 String day_of_the_week=getDayOfTheWeek(data);
-                System.out.println("I'M HEREEEEEEEEEEEEEEEEE"+data);
-                System.out.println("I'M HEREE"+day_of_the_week);
 
                 return new Fly(airline,null,day_of_the_week,null,null,null,null,null,null,0,0,0);
             }
@@ -81,18 +90,25 @@ public class SparkMachineLearning {
     public static String getNameOfWeekInEnglish(String day){
         switch (day){
             case "lunedì":
+            case "Monday":
                 return "Monday";
             case "martedì":
+            case "Tuesday":
                 return "Tuesday";
             case "mercoledì":
+            case "Wednesday":
                 return "Wednesday";
             case "giovedì":
+            case "Thursday":
                 return "Thursday";
             case "venerdì":
+            case "Friday":
                 return "Friday";
             case "sabato":
+            case "Saturday":
                 return "Saturday";
             case "domenica":
+            case "Sunday":
                 return "Sunday";
         }
         return null;
