@@ -41,44 +41,19 @@ public class SparkMachineLearning {
                 String airline = value.getAs("airline");
                 String data=value.getAs("date");
                 String day_of_the_week=getDayOfTheWeek(data);
-
-                return new Fly(airline,null,day_of_the_week,null,null,null,null,null,null,0,0,0);
+                String month=getMonth(data);
+                return new Fly(airline,month,day_of_the_week,null,null,null,null,null,null,0,0,0);
             }
         },Encoders.bean(Fly.class));
 
         flys.show();
-
-
-        /*
-        try {
-            String input_date = "30/12/2022";
-            SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
-            Date dt1 = format1.parse(input_date);
-            DateFormat format2 = new SimpleDateFormat("EEEE");
-            DateFormat format3 = new SimpleDateFormat("MMMM");
-            String finalDay = format2.format(dt1);
-            System.out.println(getNameOfWeekInEnglish(finalDay));
-            String finalMonth = format3.format(dt1);
-            System.out.println(finalMonth);
-        }catch (Exception e){
-            System.err.println("Eccezzione");
-        }
-        */
-
     }
 
     public static String getDayOfTheWeek(String input_date){
         try{
-            //Locale locale=new Locale("en","us");
             SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
-
             Date dt1 = format1.parse(input_date);
-            //day of the week
             DateFormat format2 = new SimpleDateFormat("EEEE");
-
-            //mounth
-            //DateFormat format3 = new SimpleDateFormat("MMMM");
-
             String finalDay = format2.format(dt1);
             return getNameOfWeekInEnglish(finalDay);
         }catch (Exception e){
@@ -87,32 +62,85 @@ public class SparkMachineLearning {
         }
     }
 
-    public static String getNameOfWeekInEnglish(String day){
-        switch (day){
-            case "lunedì":
-            case "Monday":
-                return "Monday";
-            case "martedì":
-            case "Tuesday":
-                return "Tuesday";
-            case "mercoledì":
-            case "Wednesday":
-                return "Wednesday";
-            case "giovedì":
-            case "Thursday":
-                return "Thursday";
-            case "venerdì":
-            case "Friday":
-                return "Friday";
-            case "sabato":
-            case "Saturday":
-                return "Saturday";
-            case "domenica":
-            case "Sunday":
-                return "Sunday";
+    public static String getMonth(String input_date){
+        try{
+            SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
+            Date dt1 = format1.parse(input_date);
+            DateFormat format3 = new SimpleDateFormat("MMMM");
+            String finalMonth = format3.format(dt1);
+            return getNameOfMonth(finalMonth);
+        }catch (Exception e){
+            System.err.println("Error");
+            return null;
         }
-        return null;
     }
 
+    public static String getNameOfWeekInEnglish(String day){
+        if(day.equalsIgnoreCase("lunedì") || day.equalsIgnoreCase("monday")){
+            return "Monday";
+        }
+        else if(day.equalsIgnoreCase("martedì") || day.equalsIgnoreCase("tuesday")){
+            return "Tuesday";
+        }
+        else if(day.equalsIgnoreCase("mercoledì") || day.equalsIgnoreCase("wednesday")){
+            return "Wednesday";
+        }
+        else if(day.equalsIgnoreCase("giovedì") || day.equalsIgnoreCase("thursday")){
+            return "Thursday";
+        }
+        else if(day.equalsIgnoreCase("venerdì") || day.equalsIgnoreCase("friday")){
+            return "Friday";
+        }
+        else if(day.equalsIgnoreCase("sabato") || day.equalsIgnoreCase("saturday")){
+            return "Saturday";
+        }
+        else if(day.equalsIgnoreCase("domenica") || day.equalsIgnoreCase("sunday")){
+            return "Sunday";
+        }
+        else{
+            return null;
+        }
+    }
 
+    public static String getNameOfMonth(String month){
+        if(month.equalsIgnoreCase("gennaio") || month.equalsIgnoreCase("january")){
+            return "January";
+        }
+        else if(month.equalsIgnoreCase("febbraio") || month.equalsIgnoreCase("february")){
+            return "February";
+        }
+        else if(month.equalsIgnoreCase("marzo") || month.equalsIgnoreCase("march")){
+            return "March";
+        }
+        else if(month.equalsIgnoreCase("aprile") || month.equalsIgnoreCase("april")){
+            return "April";
+        }
+        else if(month.equalsIgnoreCase("maggio") || month.equalsIgnoreCase("may")){
+            return "May";
+        }
+        else if(month.equalsIgnoreCase("giugno") || month.equalsIgnoreCase("june")){
+            return "June";
+        }
+        else if(month.equalsIgnoreCase("luglio") || month.equalsIgnoreCase("july")){
+            return "July";
+        }
+        else if(month.equalsIgnoreCase("agosto") || month.equalsIgnoreCase("august")){
+            return "August";
+        }
+        else if(month.equalsIgnoreCase("settembre") || month.equalsIgnoreCase("september")){
+            return "September";
+        }
+        else if(month.equalsIgnoreCase("ottobre") || month.equalsIgnoreCase("october")){
+            return "October";
+        }
+        else if(month.equalsIgnoreCase("novembre") || month.equalsIgnoreCase("november")){
+            return "November";
+        }
+        else if(month.equalsIgnoreCase("dicembre") || month.equalsIgnoreCase("december")){
+            return "December";
+        }
+        else{
+            return null;
+        }
+    }
 }
