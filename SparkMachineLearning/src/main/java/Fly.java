@@ -13,12 +13,14 @@ public class Fly implements Serializable {
     private Boolean destination_busy;
     private ArrayList<String> route;
     private String dep_timeZone;
-    private int duration;
-    private int total_stops;
+    private String arrival_timeZone;
+    private String duration;
+    private String total_stops;
     private int price;
+    private Boolean busy_Intermediate;
 
 
-    public Fly(String airline, String month, String day_of_the_week, String source, Boolean source_busy, String destination, Boolean destination_busy, ArrayList<String> route, String dep_timeZone, int duration, int total_stops, int price) {
+    public Fly(String airline, String month, String day_of_the_week, String source, Boolean source_busy, String destination, Boolean destination_busy, ArrayList<String> route, String dep_timeZone,String arrival_timeZone, String duration, String total_stops, int price,Boolean busy_Intermediate) {
         this.airline = airline;
         this.month = month;
         this.day_of_the_week = day_of_the_week;
@@ -28,9 +30,11 @@ public class Fly implements Serializable {
         this.destination_busy = destination_busy;
         this.route = route;
         this.dep_timeZone = dep_timeZone;
+        this.arrival_timeZone=arrival_timeZone;
         this.duration = duration;
         this.total_stops = total_stops;
         this.price = price;
+        this.busy_Intermediate=busy_Intermediate;
     }
 
     public Fly(){}
@@ -71,11 +75,13 @@ public class Fly implements Serializable {
         return dep_timeZone;
     }
 
-    public int getDuration() {
+    public String getArrival_timeZone() {return arrival_timeZone;}
+
+    public String getDuration() {
         return duration;
     }
 
-    public int getTotal_stops() {
+    public String getTotal_stops() {
         return total_stops;
     }
 
@@ -83,6 +89,9 @@ public class Fly implements Serializable {
         return price;
     }
 
+    public Boolean getBusy_Intermediate() {
+        return busy_Intermediate;
+    }
 
     public void setAirline(String airline) {
         this.airline = airline;
@@ -120,11 +129,13 @@ public class Fly implements Serializable {
         this.dep_timeZone = dep_timeZone;
     }
 
-    public void setDuration(int duration) {
+    public void setArrival_timeZone(String arrival_timeZone) {this.arrival_timeZone = arrival_timeZone;}
+
+    public void setDuration(String duration) {
         this.duration = duration;
     }
 
-    public void setTotal_stops(int total_stops) {
+    public void setTotal_stops(String total_stops) {
         this.total_stops = total_stops;
     }
 
@@ -132,16 +143,20 @@ public class Fly implements Serializable {
         this.price = price;
     }
 
+    public void setBusy_Intermediate(Boolean busy_Intermediate) {
+        this.busy_Intermediate = busy_Intermediate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Fly fly = (Fly) o;
-        return duration == fly.duration && total_stops == fly.total_stops && price == fly.price && airline.equals(fly.airline) && month.equals(fly.month) && day_of_the_week.equals(fly.day_of_the_week) && source.equals(fly.source) && source_busy.equals(fly.source_busy) && destination.equals(fly.destination) && destination_busy.equals(fly.destination_busy) && route.equals(fly.route) && dep_timeZone.equals(fly.dep_timeZone);
+        return price == fly.price && airline.equals(fly.airline) && month.equals(fly.month) && day_of_the_week.equals(fly.day_of_the_week) && source.equals(fly.source) && source_busy.equals(fly.source_busy) && destination.equals(fly.destination) && destination_busy.equals(fly.destination_busy) && route.equals(fly.route) && dep_timeZone.equals(fly.dep_timeZone) && duration.equals(fly.duration) && total_stops.equals(fly.total_stops) && busy_Intermediate.equals(fly.busy_Intermediate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(airline, month, day_of_the_week, source, source_busy, destination, destination_busy, route, dep_timeZone, duration, total_stops, price);
+        return Objects.hash(airline, month, day_of_the_week, source, source_busy, destination, destination_busy, route, dep_timeZone, duration, total_stops, price, busy_Intermediate);
     }
 }
