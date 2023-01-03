@@ -1,8 +1,10 @@
+package data_preprocessing;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Fly implements Serializable {
+public class Fly implements Serializable{
     //"airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price int").csv("DataSet_Train.csv");
     private String airline;
     private String month;
