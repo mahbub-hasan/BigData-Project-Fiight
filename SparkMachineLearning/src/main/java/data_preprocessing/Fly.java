@@ -1,8 +1,10 @@
+package data_preprocessing;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Fly implements Serializable {
+public class Fly{
     //"airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price int").csv("DataSet_Train.csv");
     private String airline;
     private String month;
@@ -149,18 +151,5 @@ public class Fly implements Serializable {
 
     public void setBusy_Intermediate(int busy_Intermediate) {
         this.busy_Intermediate = busy_Intermediate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Fly fly = (Fly) o;
-        return source_busy == fly.source_busy && destination_busy == fly.destination_busy && duration == fly.duration && total_stops == fly.total_stops && Double.compare(fly.price, price) == 0 && busy_Intermediate == fly.busy_Intermediate && airline.equals(fly.airline) && month.equals(fly.month) && day_of_the_week.equals(fly.day_of_the_week) && source.equals(fly.source) && destination.equals(fly.destination) && route.equals(fly.route) && dep_timeZone.equals(fly.dep_timeZone) && arrival_timeZone.equals(fly.arrival_timeZone);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(airline, month, day_of_the_week, source, source_busy, destination, destination_busy, route, dep_timeZone, arrival_timeZone, duration, total_stops, price, busy_Intermediate);
     }
 }
