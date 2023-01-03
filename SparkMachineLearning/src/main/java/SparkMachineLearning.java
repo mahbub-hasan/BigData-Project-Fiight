@@ -4,12 +4,13 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import utilities.Commons;
-
+import java.lang.StringBuilder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
+import static org.apache.spark.sql.functions.*;
 
 public class SparkMachineLearning {
     public static void main(String[] args) {
@@ -17,7 +18,7 @@ public class SparkMachineLearning {
         SparkSession spark=SparkSession.builder().appName("SparkMachineLearning").master("local").getOrCreate();
 
         Dataset<Row> originalDataset=spark.read().option("delimiter",";").option("header","true")
-                .schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price int")
+                .schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price double")
                 .csv(Commons.TRAIN_DATASET);
 
         Dataset<Row> datasetResultPoint2=spark.read().option("delimiter","\t").option("header","false")
@@ -28,57 +29,135 @@ public class SparkMachineLearning {
                 .schema("name_avg string,real_average double")
                 .csv(Commons.MAP_REDUCE_3);
 
-        datasetResultPoint3.show();
-        datasetResultPoint2.show();
-        originalDataset.show();
+        //datasetResultPoint3.show();
+        //datasetResultPoint2.show();
+        //originalDataset.show();
 
+        datasetResultPoint3.show();
 
         Calendar c=Calendar.getInstance();
 
-        Dataset<Fly> flys=originalDataset.map(new MapFunction<Row, Fly>() {
+        Dataset<Row> val=datasetResultPoint3.select(datasetResultPoint3.col("real_average")).where(datasetResultPoint3.col("name_avg").equalTo("Avg"));
+        double dailyAverageOfAllAirport=val.first().getDouble(0);
+
+        System.out.println(originalDataset.count());
+        Dataset<Row> prova=originalDataset.withColumn("index",monotonically_increasing_id());
+        Dataset<Row> appoggio=prova;
+
+
+        prova=prova.withColumn("newroute",explode(split(originalDataset.col("route"), " → ")));
+        prova.drop("route");
+
+
+        prova.show();
+
+        Dataset<Row> onlyRouteSpitted=prova.groupBy(prova.col("index")).agg(collect_list("newroute"));
+        onlyRouteSpitted.show();
+
+        Dataset<Row> nuovo=prova.join(datasetResultPoint2, prova.col("newroute").equalTo(datasetResultPoint2.col("airport")),"inner").groupBy(prova.col("index")).agg(collect_list("average"));
+        nuovo.show(false);
+
+        Dataset<Row> ultimo= nuovo.join(appoggio,nuovo.col("index").equalTo(appoggio.col("index")),"inner").drop(nuovo.col("index"));
+        ultimo= ultimo.join(onlyRouteSpitted,ultimo.col("index").equalTo(onlyRouteSpitted.col("index")),"inner");
+
+        ultimo.show();
+
+
+        Dataset<Fly> flys=ultimo.map(new MapFunction<Row, Fly>() {
             @Override
             public Fly call(Row value) throws Exception {
+                // airline
                 String airline = value.getAs("airline");
-                String data=value.getAs("date");
-                String day_of_the_week=getDayOfTheWeek(data);
 
-                return new Fly(airline,null,day_of_the_week,null,null,null,null,null,null,0,0,0);
+                // Month of the journey
+                String month=getMonth(value.getAs("date"));
+
+                // DayOfWeek of the journey
+                String day_of_the_week=getDayOfTheWeek(value.getAs("date"));
+
+                // source of the journey
+                String source = value.getAs("source");
+
+                // source busy information of the journey
+                scala.collection.Seq<Double> routeAvgList=value.getAs("collect_list(average)");
+
+                boolean source_Busy=false;
+                if(routeAvgList.apply(0)>dailyAverageOfAllAirport) {
+                    source_Busy = true;
+                }
+
+                // destination of the journey
+                String destination = value.getAs("destination");
+
+                // destination busy information of the journey
+                boolean destination_Busy=false;
+                if(routeAvgList.apply(routeAvgList.length()-1)>dailyAverageOfAllAirport) {
+                    destination_Busy = true;
+                }
+
+                // list of route of the journey
+                scala.collection.Seq<String> routeList=value.getAs("collect_list(newroute)");
+                ArrayList<String> arrayRoute=new ArrayList<>();
+                for(int i=0;i<routeList.length();i++){
+                    if(i!=0 && i!=routeList.length()-1) {
+                        arrayRoute.add(routeList.apply(i));
+                    }
+                }
+
+                // Dep TimeZone of the journey
+                String deptTimeZone = returnPeriodOfDay(value.getAs("dep_time"));
+
+                // Arrival TimeZone of the journey
+                String arrivalTimeZone = returnPeriodOfDay(value.getAs("arrival_time"));
+
+                // duration of the journey
+                String duration=durationInMinute(value.getAs("duration"));
+
+                // totalStops of the journey
+                int total_stops = arrayRoute.size();
+
+                // price of the journey
+                double price=value.getAs("price");
+
+                // intermediate stops busy or not
+                boolean busy_Intermediate=false;
+                for(int i=0;i<routeAvgList.length();i++){
+                    if(i!=0 && i!=routeAvgList.length()-1){
+                        if(routeAvgList.apply(i)>dailyAverageOfAllAirport){
+                            busy_Intermediate=true;
+                        }
+                    }
+                }
+
+
+
+                return new Fly(
+                        airline,
+                        month,
+                        day_of_the_week,
+                        source,
+                        source_Busy?1:0,
+                        destination,
+                        destination_Busy?1:0,
+                        arrayRoute,
+                        deptTimeZone,
+                        arrivalTimeZone,
+                        Integer.parseInt(duration),
+                        total_stops,
+                        price,
+                        busy_Intermediate?1:0);
             }
         },Encoders.bean(Fly.class));
 
         flys.show();
 
-
-        /*
-        try {
-            String input_date = "30/12/2022";
-            SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
-            Date dt1 = format1.parse(input_date);
-            DateFormat format2 = new SimpleDateFormat("EEEE");
-            DateFormat format3 = new SimpleDateFormat("MMMM");
-            String finalDay = format2.format(dt1);
-            System.out.println(getNameOfWeekInEnglish(finalDay));
-            String finalMonth = format3.format(dt1);
-            System.out.println(finalMonth);
-        }catch (Exception e){
-            System.err.println("Eccezzione");
-        }
-        */
-
     }
 
     public static String getDayOfTheWeek(String input_date){
         try{
-            //Locale locale=new Locale("en","us");
             SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
-
             Date dt1 = format1.parse(input_date);
-            //day of the week
             DateFormat format2 = new SimpleDateFormat("EEEE");
-
-            //mounth
-            //DateFormat format3 = new SimpleDateFormat("MMMM");
-
             String finalDay = format2.format(dt1);
             return getNameOfWeekInEnglish(finalDay);
         }catch (Exception e){
@@ -87,32 +166,145 @@ public class SparkMachineLearning {
         }
     }
 
-    public static String getNameOfWeekInEnglish(String day){
-        switch (day){
-            case "lunedì":
-            case "Monday":
-                return "Monday";
-            case "martedì":
-            case "Tuesday":
-                return "Tuesday";
-            case "mercoledì":
-            case "Wednesday":
-                return "Wednesday";
-            case "giovedì":
-            case "Thursday":
-                return "Thursday";
-            case "venerdì":
-            case "Friday":
-                return "Friday";
-            case "sabato":
-            case "Saturday":
-                return "Saturday";
-            case "domenica":
-            case "Sunday":
-                return "Sunday";
+    public static String getMonth(String input_date){
+        try{
+            SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
+            Date dt1 = format1.parse(input_date);
+            DateFormat format3 = new SimpleDateFormat("MMMM");
+            String finalMonth = format3.format(dt1);
+            return getNameOfMonth(finalMonth);
+        }catch (Exception e){
+            System.err.println("Error");
+            return null;
         }
-        return null;
     }
 
+    public static String getNameOfWeekInEnglish(String day){
+        if(day.equalsIgnoreCase("lunedì") || day.equalsIgnoreCase("monday")){
+            return "Monday";
+        }
+        else if(day.equalsIgnoreCase("martedì") || day.equalsIgnoreCase("tuesday")){
+            return "Tuesday";
+        }
+        else if(day.equalsIgnoreCase("mercoledì") || day.equalsIgnoreCase("wednesday")){
+            return "Wednesday";
+        }
+        else if(day.equalsIgnoreCase("giovedì") || day.equalsIgnoreCase("thursday")){
+            return "Thursday";
+        }
+        else if(day.equalsIgnoreCase("venerdì") || day.equalsIgnoreCase("friday")){
+            return "Friday";
+        }
+        else if(day.equalsIgnoreCase("sabato") || day.equalsIgnoreCase("saturday")){
+            return "Saturday";
+        }
+        else if(day.equalsIgnoreCase("domenica") || day.equalsIgnoreCase("sunday")){
+            return "Sunday";
+        }
+        else{
+            return null;
+        }
+    }
+
+    public static String getNameOfMonth(String month){
+        if(month.equalsIgnoreCase("gennaio") || month.equalsIgnoreCase("january")){
+            return "January";
+        }
+        else if(month.equalsIgnoreCase("febbraio") || month.equalsIgnoreCase("february")){
+            return "February";
+        }
+        else if(month.equalsIgnoreCase("marzo") || month.equalsIgnoreCase("march")){
+            return "March";
+        }
+        else if(month.equalsIgnoreCase("aprile") || month.equalsIgnoreCase("april")){
+            return "April";
+        }
+        else if(month.equalsIgnoreCase("maggio") || month.equalsIgnoreCase("may")){
+            return "May";
+        }
+        else if(month.equalsIgnoreCase("giugno") || month.equalsIgnoreCase("june")){
+            return "June";
+        }
+        else if(month.equalsIgnoreCase("luglio") || month.equalsIgnoreCase("july")){
+            return "July";
+        }
+        else if(month.equalsIgnoreCase("agosto") || month.equalsIgnoreCase("august")){
+            return "August";
+        }
+        else if(month.equalsIgnoreCase("settembre") || month.equalsIgnoreCase("september")){
+            return "September";
+        }
+        else if(month.equalsIgnoreCase("ottobre") || month.equalsIgnoreCase("october")){
+            return "October";
+        }
+        else if(month.equalsIgnoreCase("novembre") || month.equalsIgnoreCase("november")){
+            return "November";
+        }
+        else if(month.equalsIgnoreCase("dicembre") || month.equalsIgnoreCase("december")){
+            return "December";
+        }
+        else{
+            return null;
+        }
+    }
+
+    public static String durationInMinute(String duration){
+        String durationSplit[]=duration.split(" ");
+        int somma=0;
+        for(int i=0;i<durationSplit.length;i++){
+            String nuovaStringa=durationSplit[i].substring(0,durationSplit[i].length()-1);
+            String type=durationSplit[i].substring(durationSplit[i].length()-1);
+            if(type.equalsIgnoreCase("h")){
+                int oreToMinute=Integer.parseInt(nuovaStringa)*60;
+                somma+=oreToMinute;
+            }
+            else if(type.equalsIgnoreCase("m")){
+                int minute=Integer.parseInt(nuovaStringa);
+                somma+=minute;
+            }
+        }
+        StringBuilder result=new StringBuilder();
+        result.append(somma);
+        return result.toString();
+    }
+
+    //22:20
+    public static String returnPeriodOfDay(String time){
+        String []onlyHour=time.split(":"); // 0->22 1->20
+        int hour=Integer.parseInt(onlyHour[0]);
+        return compareHoursAndPeriod(hour);
+    }
+
+    /**
+     * early morning -> [6 to <8]
+     * morning -> [8 to <12]
+     * afternoon -> [12 to <17]
+     * evening -> [17 to 21]
+     * night [21 to <6]
+     * @param hour
+     * @return
+     */
+    public static String compareHoursAndPeriod(int hour){
+        String partOfTheDay=null;
+
+        if(hour>=0 && hour<6){
+            partOfTheDay = "night";
+        }
+        else if(hour>=6 && hour<8){
+            partOfTheDay="early morning";
+        }
+        else if(hour>=8 && hour<12){
+            partOfTheDay="morning";
+        }
+        else if(hour>=12 && hour<17){
+            partOfTheDay="afternoon";
+        }
+        else if(hour>=17 && hour<21){
+            partOfTheDay="evening";
+        }else if(hour>=21){
+            partOfTheDay="night";
+        }
+        return partOfTheDay;
+    }
 
 }
