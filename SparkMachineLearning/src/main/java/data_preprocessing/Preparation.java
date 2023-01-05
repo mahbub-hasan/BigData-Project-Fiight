@@ -1,5 +1,6 @@
 package data_preprocessing;
 
+import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -269,5 +270,12 @@ public class Preparation {
             partOfTheDay="night";
         }
         return partOfTheDay;
+    }
+
+    public static Dataset<Row> getClusterInstance(int cluster_id,String clusterColumn,Dataset<Row> data){
+        return data.filter((FilterFunction<Row>) r ->{
+            int predictedCluster = r.getAs(clusterColumn);
+            return predictedCluster==cluster_id;
+        });
     }
 }

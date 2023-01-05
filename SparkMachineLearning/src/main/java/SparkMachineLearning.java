@@ -1,9 +1,14 @@
 import data_preprocessing.Fly;
 import data_preprocessing.Preparation;
+import model.KMeansWithRegression;
+import org.apache.spark.api.java.function.ReduceFunction;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import utilities.Commons;
+
+import java.util.List;
 
 import static org.apache.spark.sql.functions.*;
 import static org.apache.spark.sql.functions.collect_list;
@@ -44,9 +49,18 @@ public class SparkMachineLearning {
         trainData.show();
         testData.show();
 
-        /**
-         * Start ML
-         */
+        KMeansWithRegression model = new KMeansWithRegression();
+        model.fit(trainData);
+        List<Dataset<Row>> result = model.transform(testData);
+
+        double sum = 0d;
+        for(Dataset<Row> data : result) {
+            data.persist();
+            sum += data.select("prediction").as(Encoders.DOUBLE()).reduce((ReduceFunction<Double>) (f1, f2)->f1+f2);
+            data.unpersist();
+        }
+
+        System.out.println(sum);
     }
 
 
