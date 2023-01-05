@@ -1,6 +1,6 @@
 import data_preprocessing.Fly;
 import data_preprocessing.Preparation;
-import model.KMeansWithRegression;
+import model.DecisionTreeWithRegression;
 import org.apache.spark.api.java.function.ReduceFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -10,7 +10,6 @@ import utilities.Commons;
 
 import java.util.List;
 
-import static org.apache.spark.sql.functions.*;
 import static org.apache.spark.sql.functions.collect_list;
 
 public class SparkMachineLearning {
@@ -46,21 +45,14 @@ public class SparkMachineLearning {
         Dataset<Fly> trainData = Preparation.transform(preProcessingDataSetTrain, dailyAverageOfAllAirport);
         Dataset<Fly> testData = Preparation.transform(preProcessingDataSetTest, dailyAverageOfAllAirport);
 
-        trainData.show();
-        testData.show();
+        Dataset<Row> trainDF = trainData.withColumnRenamed("price", "label");
+        Dataset<Row> testDF = testData.withColumnRenamed("price", "label");
 
-        KMeansWithRegression model = new KMeansWithRegression();
-        model.fit(trainData);
-        List<Dataset<Row>> result = model.transform(testData);
+        trainDF.show();
+        testDF.show();
 
-        double sum = 0d;
-        for(Dataset<Row> data : result) {
-            data.persist();
-            sum += data.select("prediction").as(Encoders.DOUBLE()).reduce((ReduceFunction<Double>) (f1, f2)->f1+f2);
-            data.unpersist();
-        }
+        new DecisionTreeWithRegression(trainDF, testDF);
 
-        System.out.println(sum);
     }
 
 
