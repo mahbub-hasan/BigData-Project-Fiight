@@ -20,7 +20,10 @@ public class DecisionTreeWithRegression {
 
     public DecisionTreeWithRegression(Dataset<Row> trainingSet, Dataset<Row> testSet){
 
-        StringIndexer airlineIndexer=new StringIndexer().setInputCol("airline").setOutputCol("airlineIndex");
+        //trainingSet.show(2);
+        //testSet.show(2);
+
+        StringIndexer airlineIndexer=new StringIndexer().setInputCol("airline").setOutputCol("airlineIndex").setHandleInvalid("skip");
         StringIndexer monthIndexer=new StringIndexer().setInputCol("month").setOutputCol("monthIndex");
         StringIndexer dayOfTheWeekIndexer=new StringIndexer().setInputCol("day_of_the_week").setOutputCol("day_of_the_weekIndex");
         StringIndexer sourceIndexer=new StringIndexer().setInputCol("source").setOutputCol("sourceIndex");
@@ -28,12 +31,21 @@ public class DecisionTreeWithRegression {
         StringIndexer dep_timeZoneIndexer=new StringIndexer().setInputCol("dep_timeZone").setOutputCol("dep_timeZoneIndex");
         StringIndexer arrival_timeZoneIndexer=new StringIndexer().setInputCol("arrival_timeZone").setOutputCol("arrival_timeZoneIndex");
 
+//        airlineIndexer.fit(trainingSet).transform(trainingSet).show();
+//        monthIndexer.fit(trainingSet).transform(trainingSet).show();
+//        dayOfTheWeekIndexer.fit(trainingSet).transform(trainingSet).show();
+//        sourceIndexer.fit(trainingSet).transform(trainingSet).show();
+//        destinationIndexer.fit(trainingSet).transform(trainingSet).show();
+//        dep_timeZoneIndexer.fit(trainingSet).transform(trainingSet).show();
+//        arrival_timeZoneIndexer.fit(trainingSet).transform(trainingSet).show();
+
+
         OneHotEncoder encoder=new OneHotEncoder()
                 .setInputCols(new String[]{"airlineIndex","monthIndex","day_of_the_weekIndex","sourceIndex","destinationIndex","dep_timeZoneIndex","arrival_timeZoneIndex"})
                 .setOutputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","sourceIndexEnc","destinationIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc"});
 
         VectorAssembler assembler=new VectorAssembler()
-                .setInputCols(new String[]{"airlineIndex","monthIndex","day_of_the_weekIndex","sourceIndex","destinationIndex","dep_timeZoneIndex","arrival_timeZoneIndex","duration","total_stops"})
+                .setInputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","sourceIndexEnc","destinationIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc","duration","total_stops"})
                 .setOutputCol("features");
 
         //MinMaxScaler scaler=new MinMaxScaler().setInputCol("features_assem").setOutputCol("features");
@@ -42,8 +54,9 @@ public class DecisionTreeWithRegression {
 
         Pipeline pipeline=new Pipeline().setStages(new PipelineStage[]{airlineIndexer,monthIndexer,dayOfTheWeekIndexer,sourceIndexer,
                 destinationIndexer,dep_timeZoneIndexer,arrival_timeZoneIndexer,encoder,assembler,dt});
+//        pipeline.fit(trainingSet).transform(testSet).show();
 
-        ParamMap[] paramGrid = new ParamGridBuilder().addGrid(dt.maxDepth(), new int[] {5}).addGrid(dt.maxBins(),new int[]{15}).build();
+        ParamMap[] paramGrid = new ParamGridBuilder().addGrid(dt.maxDepth(), new int[] {5}).build();
 
         CrossValidator cv=new CrossValidator().setEstimator(pipeline).setEvaluator(new RegressionEvaluator()).setEstimatorParamMaps(paramGrid).setNumFolds(3);
 
@@ -51,5 +64,6 @@ public class DecisionTreeWithRegression {
 
         Dataset<Row> predictions=crossValidatorModel.transform(testSet);
 
+        predictions.show(5);
     }
 }

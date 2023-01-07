@@ -2,10 +2,7 @@ import data_preprocessing.Fly;
 import data_preprocessing.Preparation;
 import model.DecisionTreeWithRegression;
 import org.apache.spark.api.java.function.ReduceFunction;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import utilities.Commons;
 
 import java.util.List;
@@ -45,13 +42,22 @@ public class SparkMachineLearning {
         Dataset<Fly> trainData = Preparation.transform(preProcessingDataSetTrain, dailyAverageOfAllAirport);
         Dataset<Fly> testData = Preparation.transform(preProcessingDataSetTest, dailyAverageOfAllAirport);
 
-        Dataset<Row> trainDF = trainData.withColumnRenamed("price", "label");
-        Dataset<Row> testDF = testData.withColumnRenamed("price", "label");
+        Dataset<Row> trainDF = trainData.select("airline", "month", "day_of_the_week", "source", "source_busy",
+                "destination", "destination_busy", "dep_timeZone", "arrival_timeZone", "duration", "total_stops",
+                "busy_Intermediate", "price");
+        Dataset<Row> testDF = testData.select("airline", "month", "day_of_the_week", "source", "source_busy",
+                "destination", "destination_busy", "dep_timeZone", "arrival_timeZone", "duration", "total_stops",
+                "busy_Intermediate", "price");
 
-        trainDF.show();
-        testDF.show();
+        Dataset<Row> dataTrain = trainDF.withColumnRenamed("price", "label");
+        Dataset<Row> dataTest = testDF.withColumnRenamed("price","label");
 
-        new DecisionTreeWithRegression(trainDF, testDF);
+        //dataTrain.select(functions.col("airline")).distinct().show();
+        //dataTest.select(functions.col("airline")).distinct().show();
+        //dataTrain.show(2);
+        //dataTest.show(2);
+
+        new DecisionTreeWithRegression(dataTrain, dataTest);
 
     }
 
