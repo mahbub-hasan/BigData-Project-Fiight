@@ -16,24 +16,29 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 public class RandomForestWithRegression {
-    public RandomForestWithRegression(Dataset<Row> trainingSet, Dataset<Row> testSet){
 
-        StringIndexer textToInt=new StringIndexer().setInputCols(new String[]{"airline","month","day_of_the_week","dep_timeZone","arrival_timeZone"})
-                .setOutputCols(new String[]{"airlineIndex","monthIndex","day_of_the_weekIndex","dep_timeZoneIndex","arrival_timeZoneIndex"}).setHandleInvalid("skip");
+    public RandomForestWithRegression() {
+    }
+
+    public double applyModel(Dataset<Row> trainingSet, Dataset<Row> testSet){
+
+        StringIndexer textToInt=new StringIndexer()
+                .setInputCols(new String[]{"month", "day_of_the_week", "arrival_timeZone"})
+                .setOutputCols(new String[]{"monthIndex","day_of_the_weekIndex","arrival_timeZoneIndex"});
 
         OneHotEncoder encoder=new OneHotEncoder()
-                .setInputCols(new String[]{"airlineIndex","monthIndex","day_of_the_weekIndex","dep_timeZoneIndex","arrival_timeZoneIndex"})
-                .setOutputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc"});
+                .setInputCols(new String[]{"monthIndex","day_of_the_weekIndex","arrival_timeZoneIndex"})
+                .setOutputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","arrival_timeZoneIndexEnc"});
 
         VectorAssembler assembler=new VectorAssembler()
-                .setInputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc","duration","total_stops","source_busy","destination_busy"})
+                .setInputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","destination_busy","arrival_timeZoneIndexEnc","busy_Intermediate"})
                 .setOutputCol("features");
 
         RandomForestRegressor rf=new RandomForestRegressor().setLabelCol("label").setFeaturesCol("features");
 
         Pipeline pipeline=new Pipeline().setStages(new PipelineStage[]{textToInt,encoder,assembler,rf});
 
-        ParamMap[] paramGrid = new ParamGridBuilder().addGrid(rf.maxDepth(), new int[] {5}).build();
+        ParamMap[] paramGrid = new ParamGridBuilder().addGrid(rf.maxDepth(), new int[] {5,10, 15}).build();
 
         CrossValidator cv=new CrossValidator().setEstimator(pipeline).setEvaluator(new RegressionEvaluator()).setEstimatorParamMaps(paramGrid).setNumFolds(3);
 
@@ -41,14 +46,15 @@ public class RandomForestWithRegression {
 
         Dataset<Row> predictions=crossValidatorModel.transform(testSet);
 
-        predictions.show(5);
+        //predictions.show(5);
 
         RegressionEvaluator evaluator=new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse");
-        double evaluate = evaluator.evaluate(predictions);
-        System.out.println("********************************************");
+        /*System.out.println("********************************************");
         System.out.println();
         System.out.println("RMSE RANDOM FOREST"+evaluate);
         System.out.println();
-        System.out.println("********************************************");
+        System.out.println("********************************************");*/
+
+        return evaluator.evaluate(predictions);
     }
 }

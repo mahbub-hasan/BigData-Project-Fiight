@@ -36,21 +36,29 @@ public class SparkMachineLearning {
 
         Dataset<Fly> trainData = Preparation.transform(preProcessingDataSetTrain, dailyAverageOfAllAirport);
 
-        Dataset<Row> trainDF = trainData.select("airline", "month", "day_of_the_week", "source", "source_busy",
-                "destination", "destination_busy", "dep_timeZone", "arrival_timeZone", "duration", "total_stops",
-                "busy_Intermediate", "price");
+        Dataset<Row> trainDF = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
 
+        // store trainData into local disk
+        //trainDF.write().option("header","true").format("csv").save("train");
+//
         Dataset<Row> dataTrain = trainDF.withColumnRenamed("price", "label");
-
-        Dataset<Row>[] datasets = dataTrain.randomSplit(new double[]{0.8,0.2},42);
+//
+        Dataset<Row>[] datasets = dataTrain.randomSplit(new double[]{0.6,0.4},11L);
         Dataset<Row> train=datasets[0];
         Dataset<Row> test=datasets[1];
+//
+        double resultOfDT = new DecisionTreeWithRegression().applyModel(train, test);
+        double resultOfRF = new RandomForestWithRegression().applyModel(train,test);
 
-        //train.show(2);
-        //test.show(2);
-
-        new DecisionTreeWithRegression(train, test);
-        //new RandomForestWithRegression(train,test);
+        System.out.println("********************************************");
+        System.out.println();
+        System.out.println("RMSE RANDOM FOREST "+ resultOfRF);
+        System.out.println();
+        System.out.println("********************************************");
+        System.out.println();
+        System.out.println("RMSE DECISION TREE "+ resultOfDT);
+        System.out.println();
+        System.out.println("********************************************");
 
     }
 
