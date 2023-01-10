@@ -14,7 +14,6 @@ public class DailyAllFlightAvgMap extends Mapper<LongWritable, Text, Text, IntWr
         String[] data = value.toString().split("\t");
         if(data.length == 2){
             int outputValue = Integer.parseInt(data[1]);
-
             context.write(new Text("1"), new IntWritable(outputValue));
         }
     }

@@ -1,5 +1,6 @@
 package app;
 
+import jobs.CleanDatasetJob;
 import jobs.DailyAllFlightAvgJob;
 import jobs.DailyFlightAvgJob;
 import jobs.FlightCountJob;
@@ -13,21 +14,26 @@ public class MapReduceApp {
         try {
             Scanner scanner = new Scanner(System.in);
 
+
             while (true){
-                System.out.println("1: Compute the count of Flight that arrive, dept or stop");
-                System.out.println("2: Compute the daily avg of Flight that arrive, dept or stop");
-                System.out.println("3: Compute the daily avg of all flight");
+                System.out.println("1: Compute the clean of dataset");
+                System.out.println("2: Compute the count of Flight that arrive, dept or stop");
+                System.out.println("3: Compute the daily avg of Flight that arrive, dept or stop");
+                System.out.println("4: Compute the daily avg of all flight");
                 try {
 
                     int choice = Integer.parseInt(scanner.nextLine());
                     switch (choice){
                         case 1:
-                            countOfFlight();
+                            cleanDataset();
                             break;
                         case 2:
-                            dailyAvgOfFlight();
+                            countOfFlight();
                             break;
                         case 3:
+                            dailyAvgOfFlight();
+                            break;
+                        case 4:
                             dailyAvgOfAllFlight();
                             break;
                         case -1:
@@ -44,6 +50,16 @@ public class MapReduceApp {
             System.err.println(ex.getMessage());
         }
 
+    }
+
+    private static void cleanDataset(){
+        try {
+            Job job = new CleanDatasetJob().buildJob();
+            job.setJarByClass(MapReduceApp.class);
+            job.waitForCompletion(true);
+        }catch (Exception ex){
+            System.err.println(ex.getMessage());
+        }
     }
 
     private static void dailyAvgOfAllFlight() {

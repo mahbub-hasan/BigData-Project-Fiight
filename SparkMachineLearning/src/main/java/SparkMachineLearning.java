@@ -1,6 +1,7 @@
 import data_preprocessing.Fly;
 import data_preprocessing.Preparation;
 import model.DecisionTreeWithRegression;
+import model.RandomForestWithRegression;
 import org.apache.spark.api.java.function.ReduceFunction;
 import org.apache.spark.sql.*;
 import utilities.Commons;
@@ -22,14 +23,9 @@ public class SparkMachineLearning {
                 .schema("name_avg string,real_average double")
                 .csv(Commons.MAP_REDUCE_3);
 
-
         Dataset<Row> trainDataset=spark.read().option("delimiter",";").option("header","true")
                 .schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price double")
                 .csv(Commons.TRAIN_DATASET);
-
-        Dataset<Row> testDataset=spark.read().option("delimiter",";").option("header","true")
-                .schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string")
-                .csv(Commons.TEST_DATASET);
 
         double dailyAverageOfAllAirport = datasetResultPoint3MapReduce
                 .select(datasetResultPoint3MapReduce.col("real_average"))
@@ -37,27 +33,21 @@ public class SparkMachineLearning {
                 .first().getDouble(0);
 
         Dataset<Row> preProcessingDataSetTrain = Preparation.preProcessing(datasetResultPoint2MapReduce, trainDataset);
-        Dataset<Row> preProcessingDataSetTest = Preparation.preProcessing(datasetResultPoint2MapReduce, testDataset);
 
         Dataset<Fly> trainData = Preparation.transform(preProcessingDataSetTrain, dailyAverageOfAllAirport);
-        Dataset<Fly> testData = Preparation.transform(preProcessingDataSetTest, dailyAverageOfAllAirport);
 
         Dataset<Row> trainDF = trainData.select("airline", "month", "day_of_the_week", "source", "source_busy",
                 "destination", "destination_busy", "dep_timeZone", "arrival_timeZone", "duration", "total_stops",
                 "busy_Intermediate", "price");
-        Dataset<Row> testDF = testData.select("airline", "month", "day_of_the_week", "source", "source_busy",
-                "destination", "destination_busy", "dep_timeZone", "arrival_timeZone", "duration", "total_stops",
-                "busy_Intermediate", "price");
 
         Dataset<Row> dataTrain = trainDF.withColumnRenamed("price", "label");
-        Dataset<Row> dataTest = testDF.withColumnRenamed("price","label");
 
-        //dataTrain.select(functions.col("airline")).distinct().show();
-        //dataTest.select(functions.col("airline")).distinct().show();
-        //dataTrain.show(2);
-        //dataTest.show(2);
+        Dataset<Row>[] datasets = dataTrain.randomSplit(new double[]{0.8,0.2},42);
+        Dataset<Row> train=datasets[0];
+        Dataset<Row> test=datasets[1];
 
-        new DecisionTreeWithRegression(dataTrain, dataTest);
+        new DecisionTreeWithRegression(train, test);
+        new RandomForestWithRegression(train,test);
 
     }
 
