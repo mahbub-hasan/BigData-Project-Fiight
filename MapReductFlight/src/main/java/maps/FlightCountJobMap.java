@@ -18,7 +18,8 @@ public class FlightCountJobMap extends Mapper<LongWritable, Text, Text, IntWrita
 
     @Override
     protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, IntWritable>.Context context) throws IOException, InterruptedException {
-        String[] data = value.toString().split(";");
+        String[] rowData = value.toString().split("\t");
+        String[] data = rowData[0].split(";");
         if(data.length == FileMapper.TOTAL_LENGTH){
             if(!data[0].equals("Airline")){
                 String date = data[FileMapper.DATA_OF_JURNEY];

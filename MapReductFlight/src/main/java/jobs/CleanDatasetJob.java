@@ -29,10 +29,10 @@ public class CleanDatasetJob implements GenericJob{
             job.setReducerClass(CleanReduceDataset.class);
 
             job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(NullWritable.class);
+            job.setMapOutputValueClass(IntWritable.class);
 
             job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(NullWritable.class);
+            job.setOutputValueClass(Text.class);
 
             Path inputPath = new Path(Commons.DATA_INPUT_CLEANING_PROCESS);
             Path outputPath = new Path(Commons.DATA_OUTPUT_CLEANING_PROCESS);
