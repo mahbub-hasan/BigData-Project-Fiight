@@ -23,7 +23,7 @@ public class SparkMachineLearning {
                 .schema("name_avg string,real_average double")
                 .csv(Commons.MAP_REDUCE_3);
 
-        Dataset<Row> trainDataset=spark.read().option("delimiter",";").option("header","true")
+        Dataset<Row> trainDataset=spark.read().option("delimiter",";")
                 .schema("airline string, date string, source string, destination string, route string, dep_time string, arrival_time string, duration string, total_stops string, additional_info string, price double")
                 .csv(Commons.TRAIN_DATASET);
 
@@ -46,8 +46,11 @@ public class SparkMachineLearning {
         Dataset<Row> train=datasets[0];
         Dataset<Row> test=datasets[1];
 
+        //train.show(2);
+        //test.show(2);
+
         new DecisionTreeWithRegression(train, test);
-        new RandomForestWithRegression(train,test);
+        //new RandomForestWithRegression(train,test);
 
     }
 

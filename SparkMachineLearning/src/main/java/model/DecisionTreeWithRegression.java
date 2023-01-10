@@ -30,16 +30,16 @@ public class DecisionTreeWithRegression {
                 .setOutputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc"});
 
         VectorAssembler assembler=new VectorAssembler()
-                .setInputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc","duration","total_stops","source_busy","destination_busy"})
+                .setInputCols(new String[]{"airlineIndexEnc","monthIndexEnc","day_of_the_weekIndexEnc","dep_timeZoneIndexEnc","arrival_timeZoneIndexEnc","duration","total_stops","source_busy","destination_busy","busy_Intermediate"})
                 .setOutputCol("features");
 
         DecisionTreeRegressor dt=new DecisionTreeRegressor().setLabelCol("label").setFeaturesCol("features");
 
         Pipeline pipeline=new Pipeline().setStages(new PipelineStage[]{textToInt,encoder,assembler,dt});
 
-        ParamMap[] paramGrid = new ParamGridBuilder().addGrid(dt.maxDepth(), new int[] {5}).build();
+        ParamMap[] paramGrid = new ParamGridBuilder().addGrid(dt.maxDepth(), new int[] {5,10,15}).build();
 
-        CrossValidator cv=new CrossValidator().setEstimator(pipeline).setEvaluator(new RegressionEvaluator()).setEstimatorParamMaps(paramGrid).setNumFolds(3);
+        CrossValidator cv=new CrossValidator().setEstimator(pipeline).setEvaluator(new RegressionEvaluator()).setEstimatorParamMaps(paramGrid).setNumFolds(5);
 
         CrossValidatorModel crossValidatorModel=cv.fit(trainingSet);
 
