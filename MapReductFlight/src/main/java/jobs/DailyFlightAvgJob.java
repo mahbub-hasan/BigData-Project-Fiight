@@ -1,5 +1,6 @@
 package jobs;
 
+import combiners.DailyFlightAvgCombiner;
 import maps.DailyFlightAvgMap;
 import maps.FlightCountJobMap;
 import org.apache.hadoop.conf.Configuration;
@@ -25,13 +26,14 @@ public class DailyFlightAvgJob implements GenericJob{
             Job job = Job.getInstance(configuration, "DailyFlightAvgJob");
 
             job.setMapperClass(DailyFlightAvgMap.class);
+            job.setCombinerClass(DailyFlightAvgCombiner.class);
             job.setReducerClass(DailyFlightAvgReducer.class);
 
             job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(IntWritable.class);
+            job.setMapOutputValueClass(Text.class);
 
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(DoubleWritable.class);
+            //job.setOutputKeyClass(Text.class);
+            //job.setOutputValueClass(DoubleWritable.class);
 
             Path inputPath = new Path(Commons.DATA_INPUT_PROBLEM_2);
             Path outputPath = new Path(Commons.DATA_OUTPUT_PROBLEM_2);

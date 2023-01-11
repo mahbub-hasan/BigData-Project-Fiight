@@ -26,6 +26,7 @@ public class CleanDatasetJob implements GenericJob{
             Job job = Job.getInstance(configuration, "CleanDatasetJob");
 
             job.setMapperClass(CleanMapDataset.class);
+            job.setCombinerClass(CleanReduceDataset.class);
             job.setReducerClass(CleanReduceDataset.class);
 
             job.setMapOutputKeyClass(Text.class);

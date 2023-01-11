@@ -7,15 +7,16 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-public class DailyFlightAvgReducer extends Reducer<Text, IntWritable, Text, DoubleWritable> {
+public class DailyFlightAvgReducer extends Reducer<Text, Text, Text, DoubleWritable> {
     @Override
-    protected void reduce(Text key, Iterable<IntWritable> values, Reducer<Text, IntWritable, Text, DoubleWritable>.Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<Text> values, Reducer<Text, Text, Text, DoubleWritable>.Context context) throws IOException, InterruptedException {
         int sum = 0;
         int count = 0;
 
-        for (IntWritable iw: values){
-            sum += iw.get();
-            count++;
+        for (Text text: values){
+            String[] data = text.toString().split(" ");
+            sum = Integer.parseInt(data[0]);
+            count = Integer.parseInt(data[1]);
         }
 
         double avg = (double) sum/count;

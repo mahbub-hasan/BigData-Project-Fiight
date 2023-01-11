@@ -8,9 +8,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-public class CleanReduceDataset extends Reducer<Text, IntWritable, Text, Text> {
+public class CleanReduceDataset extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
-    protected void reduce(Text key, Iterable<IntWritable> values, Reducer<Text, IntWritable, Text, Text>.Context context) throws IOException, InterruptedException {
-        context.write(key,new Text());
+    protected void reduce(Text key, Iterable<IntWritable> values, Reducer<Text, IntWritable, Text, IntWritable>.Context context) throws IOException, InterruptedException {
+        context.write(key,new IntWritable());
     }
 }

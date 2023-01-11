@@ -23,6 +23,7 @@ public class FlightCountJob implements GenericJob{
             Job job = Job.getInstance(configuration, "FlightCountJob");
 
             job.setMapperClass(FlightCountJobMap.class);
+            job.setCombinerClass(FlightCountJobReducer.class);
             job.setReducerClass(FlightCountJobReducer.class);
 
             job.setMapOutputKeyClass(Text.class);
