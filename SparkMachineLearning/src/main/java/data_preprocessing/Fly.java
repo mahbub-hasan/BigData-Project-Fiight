@@ -2,6 +2,7 @@ package data_preprocessing;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Fly implements Serializable{
@@ -13,7 +14,7 @@ public class Fly implements Serializable{
     private int source_busy;
     private String destination;
     private int destination_busy;
-    private ArrayList<String> route;
+    private List<String> route;
     private String dep_timeZone;
     private String arrival_timeZone;
     private int duration;
@@ -22,7 +23,7 @@ public class Fly implements Serializable{
     private int busy_Intermediate;
 
 
-    public Fly(String airline, String month, String day_of_the_week, String source, int source_busy, String destination, int destination_busy, ArrayList<String> route, String dep_timeZone, String arrival_timeZone, int duration, int total_stops, double price, int busy_Intermediate) {
+    public Fly(String airline, String month, String day_of_the_week, String source, int source_busy, String destination, int destination_busy, List<String> route, String dep_timeZone, String arrival_timeZone, int duration, int total_stops, double price, int busy_Intermediate) {
         this.airline = airline;
         this.month = month;
         this.day_of_the_week = day_of_the_week;
@@ -97,11 +98,11 @@ public class Fly implements Serializable{
         this.destination_busy = destination_busy;
     }
 
-    public ArrayList<String> getRoute() {
+    public List<String> getRoute() {
         return route;
     }
 
-    public void setRoute(ArrayList<String> route) {
+    public void setRoute(List<String> route) {
         this.route = route;
     }
 

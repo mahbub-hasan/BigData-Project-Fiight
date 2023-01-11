@@ -9,8 +9,8 @@ import scala.collection.Seq;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
+
 import static org.apache.spark.sql.functions.*;
 import static org.apache.spark.sql.functions.collect_list;
 
@@ -32,47 +32,45 @@ public class Preparation {
         return finalDataset.join(onlyRouteSplitted,finalDataset.col("index").equalTo(onlyRouteSplitted.col("index")),"inner");
     }
 
-    public static Dataset<Fly> transform(Dataset<Row> finalDataset, double dailyAverageOfAllAirport){
+    public static Dataset<Fly> transform(Dataset<Row> finalDataset, double dailyAverageOfAllAirport, List<Row> datasetResultPoint2MapReduce){
 
         return finalDataset.map((MapFunction<Row, Fly>) value -> {
             // airline
             String airline = value.getAs("airline");
-
             // Month of the journey
             String month=getMonth(value.getAs("date"));
-
             // DayOfWeek of the journey
             String day_of_the_week=getDayOfTheWeek(value.getAs("date"));
-
             // source of the journey
             String source = value.getAs("source");
-
+            // list of route
+            List<String> route = getRoute(value.getAs("route"));
+            // list of average
+            List<Double> avg = getAvg(route, datasetResultPoint2MapReduce);
             // source busy information of the journey
-            Seq<Double> routeAvgList=value.getAs("collect_list(average)");
-
             boolean source_Busy=false;
-            if(routeAvgList.apply(0)>dailyAverageOfAllAirport) {
+            if(avg.get(0) >dailyAverageOfAllAirport) {
                 source_Busy = true;
             }
-
             // destination of the journey
             String destination = value.getAs("destination");
-
             // destination busy information of the journey
             boolean destination_Busy=false;
-            if(routeAvgList.apply(routeAvgList.length()-1)>dailyAverageOfAllAirport) {
+            if(avg.get(avg.size()-1)>dailyAverageOfAllAirport) {
                 destination_Busy = true;
             }
 
-            // list of route of the journey
-            Seq<String> routeList=value.getAs("collect_list(newroute)");
-            ArrayList<String> arrayRoute=new ArrayList<>();
-            for(int i=0;i<routeList.length();i++){
-                if(i!=0 && i!=routeList.length()-1) {
-                    arrayRoute.add(routeList.apply(i));
+            // intermediate stops busy or not
+            boolean busy_Intermediate=false;
+            ArrayList<String> intermediateRouteList = new ArrayList<>();
+            for(int i=0;i<avg.size();i++){
+                if(i!=0 && i!=avg.size()-1){
+                    if(avg.get(i)>dailyAverageOfAllAirport){
+                        busy_Intermediate=true;
+                        intermediateRouteList.add(route.get(i));
+                    }
                 }
             }
-
             // Dep TimeZone of the journey
             String deptTimeZone = returnPeriodOfDay(value.getAs("dep_time"));
 
@@ -83,23 +81,13 @@ public class Preparation {
             String duration=durationInMinute(value.getAs("duration"));
 
             // totalStops of the journey
-            int total_stops = arrayRoute.size();
+            int total_stops = intermediateRouteList.size();
 
             // price of the journey
             double price = 0.0;
             try{
                 price=value.getAs("price");
             }catch (Exception ex){
-            }
-
-            // intermediate stops busy or not
-            boolean busy_Intermediate=false;
-            for(int i=0;i<routeAvgList.length();i++){
-                if(i!=0 && i!=routeAvgList.length()-1){
-                    if(routeAvgList.apply(i)>dailyAverageOfAllAirport){
-                        busy_Intermediate=true;
-                    }
-                }
             }
 
             return new Fly(
@@ -110,7 +98,7 @@ public class Preparation {
                     source_Busy?1:0,
                     destination,
                     destination_Busy?1:0,
-                    arrayRoute,
+                    route,
                     deptTimeZone,
                     arrivalTimeZone,
                     Integer.parseInt(duration),
@@ -118,6 +106,23 @@ public class Preparation {
                     price,
                     busy_Intermediate?1:0);
         }, Encoders.bean(Fly.class));
+    }
+
+    private static List<String> getRoute(String route){
+        return Arrays.asList(route.split(" → "));
+    }
+
+    private static List<Double> getAvg(List<String> airports, List<Row> data){
+        List<Double> value = new ArrayList<>();
+        airports.forEach(airport->{
+            data.forEach(info->{
+                if(info.getAs("airport").equals(airport)){
+                    value.add(Double.parseDouble(info.getAs("average").toString()));
+                }
+            });
+        });
+
+        return value;
     }
 
     private static String getDayOfTheWeek(String input_date){

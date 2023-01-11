@@ -32,33 +32,35 @@ public class SparkMachineLearning {
                 .where(datasetResultPoint3MapReduce.col("name_avg").equalTo("Avg"))
                 .first().getDouble(0);
 
-        Dataset<Row> preProcessingDataSetTrain = Preparation.preProcessing(datasetResultPoint2MapReduce, trainDataset);
+        //Dataset<Row> preProcessingDataSetTrain = Preparation.preProcessing(datasetResultPoint2MapReduce, trainDataset);
 
-        Dataset<Fly> trainData = Preparation.transform(preProcessingDataSetTrain, dailyAverageOfAllAirport);
+        Dataset<Fly> trainData = Preparation.transform(trainDataset, dailyAverageOfAllAirport, datasetResultPoint2MapReduce.collectAsList());
 
-        Dataset<Row> trainDF = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
+        trainData.show(10);
+
+        //Dataset<Row> trainDF = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
 
         // store trainData into local disk
         //trainDF.write().option("header","true").format("csv").save("train");
 //
-        Dataset<Row> dataTrain = trainDF.withColumnRenamed("price", "label");
+        //Dataset<Row> dataTrain = trainDF.withColumnRenamed("price", "label");
 //
-        Dataset<Row>[] datasets = dataTrain.randomSplit(new double[]{0.6,0.4},11L);
-        Dataset<Row> train=datasets[0];
-        Dataset<Row> test=datasets[1];
+        //Dataset<Row>[] datasets = dataTrain.randomSplit(new double[]{0.6,0.4},11L);
+        //Dataset<Row> train=datasets[0];
+        //Dataset<Row> test=datasets[1];
 //
-        double resultOfDT = new DecisionTreeWithRegression().applyModel(train, test);
-        double resultOfRF = new RandomForestWithRegression().applyModel(train,test);
+        //double resultOfDT = new DecisionTreeWithRegression().applyModel(train, test);
+        //double resultOfRF = new RandomForestWithRegression().applyModel(train,test);
 
-        System.out.println("********************************************");
-        System.out.println();
-        System.out.println("RMSE RANDOM FOREST "+ resultOfRF);
-        System.out.println();
-        System.out.println("********************************************");
-        System.out.println();
-        System.out.println("RMSE DECISION TREE "+ resultOfDT);
-        System.out.println();
-        System.out.println("********************************************");
+//        System.out.println("********************************************");
+//        System.out.println();
+//        System.out.println("RMSE RANDOM FOREST "+ resultOfRF);
+//        System.out.println();
+//        System.out.println("********************************************");
+//        System.out.println();
+//        System.out.println("RMSE DECISION TREE "+ resultOfDT);
+//        System.out.println();
+//        System.out.println("********************************************");
 
     }
 
