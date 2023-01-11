@@ -34,9 +34,10 @@ public class SparkMachineLearning {
 
         //Dataset<Row> preProcessingDataSetTrain = Preparation.preProcessing(datasetResultPoint2MapReduce, trainDataset);
 
+
         Dataset<Fly> trainData = Preparation.transform(trainDataset, dailyAverageOfAllAirport, datasetResultPoint2MapReduce.collectAsList());
 
-        trainData.show(10);
+        trainData.show(100);
 
         //Dataset<Row> trainDF = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
 

@@ -30,7 +30,7 @@ public class CleanDatasetJob implements GenericJob{
             job.setReducerClass(CleanReduceDataset.class);
 
             job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(IntWritable.class);
+            job.setMapOutputValueClass(Text.class);
 
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
