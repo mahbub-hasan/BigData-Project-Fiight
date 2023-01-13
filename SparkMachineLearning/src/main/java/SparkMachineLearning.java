@@ -1,5 +1,6 @@
 import data_preprocessing.Fly;
 import data_preprocessing.Preparation;
+import model.DecisionTreeWithRegression;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.*;
 import scala.Array;
@@ -39,7 +40,7 @@ public class SparkMachineLearning {
         //List<Row> p=broadcast.getValue();
         Preparation preparation=new Preparation(spark,datasetResultPoint2MapReduce);
         Dataset<Fly> trainData =Preparation.transform(trainDataset,dailyAverageOfAllAirport);
-        trainData.show(100);
+        //trainData.show(100);
 
         //preparation.transform(trainDataset, dailyAverageOfAllAirport);
 /*
@@ -47,19 +48,49 @@ public class SparkMachineLearning {
 
         trainData.show(100);*/
 
-        //Dataset<Row> trainDF = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
+        Dataset<Row> trainDF1 = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
+        //Dataset<Row> trainDF2 = trainData.select( "airline", "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "total_stop","busy_Intermediate","price");
+        //Dataset<Row> trainDF3 = trainData.select( "airline", "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "duration","total_stop","busy_Intermediate","price");
+        Dataset<Row> trainDF4 = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "total_stops","busy_Intermediate","price");
+        Dataset<Row> trainDF5 = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "duration","total_stops","busy_Intermediate","price");
 
         // store trainData into local disk
         //trainDF.write().option("header","true").format("csv").save("train");
 //
-        //Dataset<Row> dataTrain = trainDF.withColumnRenamed("price", "label");
+        Dataset<Row> dataTrain1 = trainDF1.withColumnRenamed("price", "label");
+        Dataset<Row> dataTrain4 = trainDF4.withColumnRenamed("price", "label");
+        Dataset<Row> dataTrain5 = trainDF5.withColumnRenamed("price", "label");
 //
-        //Dataset<Row>[] datasets = dataTrain.randomSplit(new double[]{0.6,0.4},11L);
-        //Dataset<Row> train=datasets[0];
-        //Dataset<Row> test=datasets[1];
+        Dataset<Row>[] datasets_test1 = dataTrain1.randomSplit(new double[]{0.6,0.4},11L);
+        Dataset<Row>[] datasets_test2 = dataTrain4.randomSplit(new double[]{0.6,0.4},11L);
+        Dataset<Row>[] datasets_test3 = dataTrain5.randomSplit(new double[]{0.6,0.4},11L);
+
+        Dataset<Row> train_1=datasets_test1[0];
+        Dataset<Row> test_1=datasets_test1[1];
+        Dataset<Row> train_2=datasets_test2[0];
+        Dataset<Row> test_2=datasets_test2[1];
+        Dataset<Row> train_3=datasets_test3[0];
+        Dataset<Row> test_3=datasets_test3[1];
 //
-        //double resultOfDT = new DecisionTreeWithRegression().applyModel(train, test);
+        double resultOfDT_1 = new DecisionTreeWithRegression().applyModel(train_1, test_1);
+        double resultOfDT_2 = new DecisionTreeWithRegression().applyModel(train_2, test_2);
+        double resultOfDT_3 = new DecisionTreeWithRegression().applyModel(train_3, test_3);
         //double resultOfRF = new RandomForestWithRegression().applyModel(train,test);
+
+
+        System.out.println("********************************************");
+        System.out.println();
+        System.out.println("RMSE RANDOM FOREST "+ resultOfDT_1);
+        System.out.println();
+        System.out.println("********************************************");
+        System.out.println("RMSE RANDOM FOREST "+ resultOfDT_2);
+        System.out.println();
+        System.out.println("********************************************");
+        System.out.println("RMSE RANDOM FOREST "+ resultOfDT_3);
+        System.out.println();
+        System.out.println("********************************************");
+
+
 
 //        System.out.println("********************************************");
 //        System.out.println();

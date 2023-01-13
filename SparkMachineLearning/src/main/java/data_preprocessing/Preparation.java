@@ -42,9 +42,15 @@ public class Preparation {
 
             // source busy information of the journey
             boolean source_Busy=false;
-            if(avg.get(0) >dailyAverageOfAllAirport) {
-                source_Busy = true;
+            try{
+                if(avg.get(0) >dailyAverageOfAllAirport) {
+                    source_Busy = true;
+                }
+            }catch (Exception ex){
+                route.forEach(System.out::println);
+                System.out.println(route.size() +"-----------"+avg.size());
             }
+
             // destination of the journey
             String destination = value.getAs("destination");
             // destination busy information of the journey
