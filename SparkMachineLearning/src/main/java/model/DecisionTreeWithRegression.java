@@ -33,7 +33,7 @@ public class DecisionTreeWithRegression {
      * price
      */
 
-    public double applyModel(Dataset<Row> trainingSet, Dataset<Row> testSet){
+    public double applyModel(Dataset<Row> trainingSet, Dataset<Row> testSet, String... data){
 
         StringIndexer textToInt=new StringIndexer().setInputCols(new String[]{
                 "month", "day_of_the_week", "arrival_timeZone"})
@@ -44,9 +44,20 @@ public class DecisionTreeWithRegression {
                 .setInputCols(new String[]{"monthIndex","day_of_the_weekIndex","arrival_timeZoneIndex"})
                 .setOutputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","arrival_timeZoneIndexEnc"});
 
-        VectorAssembler assembler=new VectorAssembler()
-                .setInputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","destination_busy","arrival_timeZoneIndexEnc", "busy_Intermediate"})
-                .setOutputCol("features");
+        VectorAssembler assembler = null;
+        if(data.length==0){
+            assembler=new VectorAssembler()
+                    .setInputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","destination_busy","arrival_timeZoneIndexEnc", "busy_Intermediate"})
+                    .setOutputCol("features");
+        }else if(data.length==1){
+            assembler=new VectorAssembler()
+                    .setInputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","destination_busy","arrival_timeZoneIndexEnc", "busy_Intermediate", "total_stops"})
+                    .setOutputCol("features");
+        }else{
+            assembler=new VectorAssembler()
+                    .setInputCols(new String[]{"monthIndexEnc","day_of_the_weekIndexEnc","destination_busy","arrival_timeZoneIndexEnc", "busy_Intermediate", "total_stops","duration"})
+                    .setOutputCol("features");
+        }
 
         DecisionTreeRegressor dt=new DecisionTreeRegressor().setLabelCol("label").setFeaturesCol("features");
 
@@ -64,11 +75,7 @@ public class DecisionTreeWithRegression {
         //predictions.show(5);
 
         RegressionEvaluator evaluator=new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse");
-        /*System.out.println("********************************************");
-        System.out.println();
-        System.out.println("RMSE DECISION TREE"+evaluate);
-        System.out.println();
-        System.out.println("********************************************");*/
+
         return evaluator.evaluate(predictions);
     }
 }

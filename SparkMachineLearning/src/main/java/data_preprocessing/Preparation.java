@@ -9,19 +9,19 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import scala.reflect.ClassTag;
 import scala.reflect.ClassTag$;
+import utilities.DataTransfer;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Preparation {
+public class Preparation implements DataTransfer {
 
-    private SparkSession spark;
-    private static Broadcast<List<Row>> broadcast;
+    static Broadcast<List<Row>> broadcast;
 
-    public Preparation(SparkSession spark,Dataset<Row> datasetResultPoint2MapReduce){
-        this.spark=spark;
-        ClassTag<List<Row>> c= ClassTag$.MODULE$.apply(List.class);
-        broadcast = spark.sparkContext().broadcast(datasetResultPoint2MapReduce.collectAsList(),c);
+    @Override
+    public void setBroadcast(Broadcast<List<Row>> data) {
+        broadcast = data;
     }
 
     public static Dataset<Fly> transform(Dataset<Row> initialDataset, double dailyAverageOfAllAirport){
@@ -30,7 +30,14 @@ public class Preparation {
             // list of route
             List<String> route = getRoute(value.getAs("route"));
             // list of average
-            List<Double> avg = getAvg(route);
+            List<Double> avg = new ArrayList<>();
+            route.forEach(airport->{
+                broadcast.getValue().forEach(info->{
+                    if(info.getAs("airport").equals(airport)){
+                        avg.add(Double.parseDouble(info.getAs("average").toString()));
+                    }
+                });
+            });
             // airline
             String airline = value.getAs("airline");
             // Month of the journey
@@ -111,18 +118,18 @@ public class Preparation {
         return Arrays.asList(route.split(" → "));
     }
 
-    private static List<Double> getAvg(List<String> airports){
-        List<Double> value = new ArrayList<>();
-        airports.forEach(airport->{
-            broadcast.getValue().forEach(info->{
-                if(info.getAs("airport").equals(airport)){
-                    value.add(Double.parseDouble(info.getAs("average").toString()));
-                }
-            });
-        });
-
-        return value;
-    }
+//    private List<Double> getAvg(List<String> airports, Broadcast<List<Row>> broadcast){
+//        List<Double> value = new ArrayList<>();
+//        airports.forEach(airport->{
+//            broadcast.getValue().forEach(info->{
+//                if(info.getAs("airport").equals(airport)){
+//                    value.add(Double.parseDouble(info.getAs("average").toString()));
+//                }
+//            });
+//        });
+//
+//        return value;
+//    }
 
     private static String getDayOfTheWeek(String input_date){
         try{
@@ -276,7 +283,7 @@ public class Preparation {
         return partOfTheDay;
     }
 
-    public static Dataset<Row> getClusterInstance(int cluster_id,String clusterColumn,Dataset<Row> data){
+    public Dataset<Row> getClusterInstance(int cluster_id,String clusterColumn,Dataset<Row> data){
         return data.filter((FilterFunction<Row>) r ->{
             int predictedCluster = r.getAs(clusterColumn);
             return predictedCluster==cluster_id;
