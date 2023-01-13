@@ -2,39 +2,35 @@ package data_preprocessing;
 
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
-import scala.collection.Seq;
-
+import org.apache.spark.sql.SparkSession;
+import scala.reflect.ClassTag;
+import scala.reflect.ClassTag$;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.apache.spark.sql.functions.*;
-import static org.apache.spark.sql.functions.collect_list;
-
 public class Preparation {
 
-    public static Dataset<Row> preProcessing(Dataset<Row> datasetResultPoint2MapReduce, Dataset<Row> originalDataset) {
+    private SparkSession spark;
+    private static Broadcast<List<Row>> broadcast;
 
-        Dataset<Row> originalDatasetWithIndex=originalDataset.withColumn("index",monotonically_increasing_id());
-        Dataset<Row> rememberOriginalDataset=originalDatasetWithIndex;
-
-        originalDatasetWithIndex=originalDatasetWithIndex.withColumn("newroute",explode(split(originalDataset.col("route"), " → ")));
-        originalDatasetWithIndex.drop("route");
-
-        Dataset<Row> onlyRouteSplitted=originalDatasetWithIndex.groupBy(originalDatasetWithIndex.col("index")).agg(collect_list("newroute"));
-
-        Dataset<Row> averageOfTheRoute=originalDatasetWithIndex.join(datasetResultPoint2MapReduce, originalDatasetWithIndex.col("newroute").equalTo(datasetResultPoint2MapReduce.col("airport")),"inner").groupBy(originalDatasetWithIndex.col("index")).agg(collect_list("average"));
-
-        Dataset<Row> finalDataset= averageOfTheRoute.join(rememberOriginalDataset,averageOfTheRoute.col("index").equalTo(rememberOriginalDataset.col("index")),"inner").drop(averageOfTheRoute.col("index"));
-        return finalDataset.join(onlyRouteSplitted,finalDataset.col("index").equalTo(onlyRouteSplitted.col("index")),"inner");
+    public Preparation(SparkSession spark,Dataset<Row> datasetResultPoint2MapReduce){
+        this.spark=spark;
+        ClassTag<List<Row>> c= ClassTag$.MODULE$.apply(List.class);
+        broadcast = spark.sparkContext().broadcast(datasetResultPoint2MapReduce.collectAsList(),c);
     }
 
-    public static Dataset<Fly> transform(Dataset<Row> finalDataset, double dailyAverageOfAllAirport, List<Row> datasetResultPoint2MapReduce){
+    public static Dataset<Fly> transform(Dataset<Row> initialDataset, double dailyAverageOfAllAirport){
 
-        return finalDataset.map((MapFunction<Row, Fly>) value -> {
+        return initialDataset.map((MapFunction<Row, Fly>) value -> {
+            // list of route
+            List<String> route = getRoute(value.getAs("route"));
+            // list of average
+            List<Double> avg = getAvg(route);
             // airline
             String airline = value.getAs("airline");
             // Month of the journey
@@ -43,10 +39,7 @@ public class Preparation {
             String day_of_the_week=getDayOfTheWeek(value.getAs("date"));
             // source of the journey
             String source = value.getAs("source");
-            // list of route
-            List<String> route = getRoute(value.getAs("route"));
-            // list of average
-            List<Double> avg = getAvg(route, datasetResultPoint2MapReduce);
+
             // source busy information of the journey
             boolean source_Busy=false;
             if(avg.get(0) >dailyAverageOfAllAirport) {
@@ -112,10 +105,10 @@ public class Preparation {
         return Arrays.asList(route.split(" → "));
     }
 
-    private static List<Double> getAvg(List<String> airports, List<Row> data){
+    private static List<Double> getAvg(List<String> airports){
         List<Double> value = new ArrayList<>();
         airports.forEach(airport->{
-            data.forEach(info->{
+            broadcast.getValue().forEach(info->{
                 if(info.getAs("airport").equals(airport)){
                     value.add(Double.parseDouble(info.getAs("average").toString()));
                 }

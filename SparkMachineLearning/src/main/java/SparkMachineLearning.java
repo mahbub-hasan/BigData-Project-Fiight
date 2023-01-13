@@ -1,9 +1,10 @@
 import data_preprocessing.Fly;
 import data_preprocessing.Preparation;
-import model.DecisionTreeWithRegression;
-import model.RandomForestWithRegression;
-import org.apache.spark.api.java.function.ReduceFunction;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.*;
+import scala.Array;
+import scala.reflect.ClassTag;
+import scala.reflect.ClassTag$;
 import utilities.Commons;
 
 import java.util.List;
@@ -14,7 +15,6 @@ public class SparkMachineLearning {
     public static void main(String[] args) {
 
         SparkSession spark = SparkSession.builder().appName("SparkMachineLearning").master("local").getOrCreate();
-
         Dataset<Row> datasetResultPoint2MapReduce = spark.read().option("delimiter", "\t").option("header", "false")
                 .schema("airport string,average double")
                 .csv(Commons.MAP_REDUCE_2);
@@ -32,12 +32,20 @@ public class SparkMachineLearning {
                 .where(datasetResultPoint3MapReduce.col("name_avg").equalTo("Avg"))
                 .first().getDouble(0);
 
+        //List<Row> rows = datasetResultPoint2MapReduce.collectAsList();
         //Dataset<Row> preProcessingDataSetTrain = Preparation.preProcessing(datasetResultPoint2MapReduce, trainDataset);
 
 
-        Dataset<Fly> trainData = Preparation.transform(trainDataset, dailyAverageOfAllAirport, datasetResultPoint2MapReduce.collectAsList());
-
+        //List<Row> p=broadcast.getValue();
+        Preparation preparation=new Preparation(spark,datasetResultPoint2MapReduce);
+        Dataset<Fly> trainData =Preparation.transform(trainDataset,dailyAverageOfAllAirport);
         trainData.show(100);
+
+        //preparation.transform(trainDataset, dailyAverageOfAllAirport);
+/*
+        Dataset<Fly> trainData = Preparation.transform(trainDataset, dailyAverageOfAllAirport);
+
+        trainData.show(100);*/
 
         //Dataset<Row> trainDF = trainData.select( "month", "day_of_the_week", "destination_busy", "arrival_timeZone", "busy_Intermediate", "price");
 
