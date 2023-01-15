@@ -8,10 +8,6 @@ import utilites.FileMapper;
 
 import java.io.IOException;
 
-/**
- *  Date, Airport, Count
- *  Day-1, BLR , 5
- */
 public class FlightCountJobMap extends Mapper<LongWritable, Text, Text, IntWritable> {
 
     IntWritable ONE = new IntWritable(1);
