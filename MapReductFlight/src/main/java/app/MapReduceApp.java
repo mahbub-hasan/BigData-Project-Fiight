@@ -22,27 +22,35 @@ public class MapReduceApp {
             DailyAllFlightAvgJob.setJarByClass(MapReduceApp.class);
 
             ControlledJob job1 = new ControlledJob(cleanDataJob.getConfiguration());
+            job1.setJob(cleanDataJob);
             ControlledJob job2 = new ControlledJob(flightCountJob.getConfiguration());
+            job2.setJob(flightCountJob);
             ControlledJob job3 = new ControlledJob(DailyFlightAvgJob.getConfiguration());
+            job3.setJob(DailyFlightAvgJob);
             ControlledJob job4 = new ControlledJob(DailyAllFlightAvgJob.getConfiguration());
+            job4.setJob(DailyAllFlightAvgJob);
 
             JobControl jobControl = new JobControl("Flight Price MapReduce Jobs");
+
+
+            job2.addDependingJob(job1);
+            job3.addDependingJob(job2);
+            job4.addDependingJob(job3);
+
             jobControl.addJob(job1);
             jobControl.addJob(job2);
             jobControl.addJob(job3);
             jobControl.addJob(job4);
 
-            job2.addDependingJob(job1);
-            job3.addDependingJob(job2);
-            job4.addDependingJob(job2);
+            new Thread(jobControl).start();
 
-            jobControl.run();
 
             while (!jobControl.allFinished()){
                 try{
                     Thread.sleep(5000);
                 }catch (Exception ex){
                     System.err.println(ex.getMessage());
+                    break;
                 }
             }
 
