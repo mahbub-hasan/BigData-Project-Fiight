@@ -36,7 +36,8 @@ public class MapReduceApp {
             job3.addDependingJob(job2);
             job4.addDependingJob(job2);
 
-            new Thread(jobControl).start();
+            jobControl.run();
+
             while (!jobControl.allFinished()){
                 try{
                     Thread.sleep(5000);
@@ -44,6 +45,7 @@ public class MapReduceApp {
                     System.err.println(ex.getMessage());
                 }
             }
+
             jobControl.stop();
         }catch (Exception ex){
             System.err.println(ex.getMessage());
