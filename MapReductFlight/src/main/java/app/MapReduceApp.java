@@ -32,7 +32,6 @@ public class MapReduceApp {
 
             JobControl jobControl = new JobControl("Flight Price MapReduce Jobs");
 
-
             job2.addDependingJob(job1);
             job3.addDependingJob(job2);
             job4.addDependingJob(job3);
